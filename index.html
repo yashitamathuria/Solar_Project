@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SolarSentinel | Thermal Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="SolarSentinel home">
+        <span class="brand-mark">✳</span>
+        <span>solar<span class="brand-light">sentinel</span><small>THERMAL INTELLIGENCE</small></span>
+      </a>
+      <div class="nav-label">WORKSPACE</div>
+      <nav class="nav">
+        <a class="nav-item active" href="#overview"><span>▦</span> Overview</a>
+        <a class="nav-item" href="#analyze"><span>◎</span> Analyze image</a>
+        <a class="nav-item" href="#history"><span>◷</span> Inspection history</a>
+        <a class="nav-item" href="#reports"><span>▤</span> Reports</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="status-dot"></div>
+        <div><strong>System ready</strong><small>Analysis workspace online</small></div>
+      </div>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="mobile-brand"><span class="brand-mark">✳</span> SolarSentinel</div>
+        <div class="breadcrumb">Workspace <span>/</span> <strong>Overview</strong></div>
+        <div class="top-actions">
+          <span class="live-pill"><i></i>WORKSPACE</span>
+          <div class="avatar">SS</div>
+        </div>
+      </header>
+
+      <section class="page-heading" id="overview">
+        <div>
+          <p class="eyebrow">RENEWABLE ENERGY · ASSET HEALTH</p>
+          <h1>Solar intelligence, <span>at a glance.</span></h1>
+          <p class="subheading">Detect thermal anomalies early. Keep every panel performing at its best.</p>
+        </div>
+        <a href="#analyze" class="primary-button"><span>＋</span> New inspection</a>
+      </section>
+
+      <section class="stats-grid" aria-label="Inspection summary">
+        <article class="stat-card">
+          <div class="stat-top"><span>Panels inspected</span><span class="stat-icon blue">▦</span></div>
+          <div class="stat-number" id="totalInspected">128</div>
+          <div class="stat-foot"><span class="trend">↗ 12%</span> vs. previous period</div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top"><span>Healthy panels</span><span class="stat-icon green">✓</span></div>
+          <div class="stat-number" id="healthyCount">113</div>
+          <div class="stat-foot"><span class="healthy-text">88.3%</span> of inspected panels</div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top"><span>Anomalies flagged</span><span class="stat-icon orange">⚠</span></div>
+          <div class="stat-number" id="anomalyCount">15</div>
+          <div class="stat-foot"><span class="warning-text">Requires review</span> by maintenance team</div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top"><span>Inspection coverage</span><span class="stat-icon violet">◉</span></div>
+          <div class="stat-number">76<span class="stat-unit">%</span></div>
+          <div class="progress-track"><span style="width:76%"></span></div>
+          <div class="stat-foot">Current solar site</div>
+        </article>
+      </section>
+
+      <section class="workspace-grid">
+        <article class="panel upload-panel" id="analyze">
+          <div class="panel-heading">
+            <div><p class="eyebrow">AI-POWERED SCAN</p><h2>Analyze thermal image</h2></div>
+            <span class="step-tag">STEP 01</span>
+          </div>
+          <p class="panel-description">Upload a thermal image of a solar panel to identify suspicious heat patterns.</p>
+          <label class="upload-zone" id="dropZone" for="imageInput">
+            <input type="file" id="imageInput" accept="image/*" />
+            <div class="upload-symbol">↑</div>
+            <strong>Drop your thermal image here</strong>
+            <span>or <u>browse files</u> from your device</span>
+            <small>PNG, JPG or WEBP · Max 10 MB</small>
+          </label>
+          <div class="file-preview hidden" id="filePreview">
+            <img id="previewImage" alt="Selected thermal image preview" />
+            <div class="file-details"><strong id="fileName">thermal-image.png</strong><span id="fileSize">0 KB</span></div>
+            <button class="icon-button" id="removeImage" type="button" aria-label="Remove selected image">×</button>
+          </div>
+          <div class="upload-actions">
+            <span class="secure-note"><span>⌑</span> Image stays local in demo mode</span>
+            <button class="primary-button analyze-button" id="analyzeButton" type="button" disabled>Analyze image <span>→</span></button>
+          </div>
+          <p class="inline-message" id="uploadMessage" role="status"></p>
+        </article>
+
+        <article class="panel result-panel" id="results">
+          <div class="panel-heading">
+            <div><p class="eyebrow">MODEL OUTPUT</p><h2>Analysis results</h2></div>
+            <span class="result-state" id="resultState"><i></i> Awaiting image</span>
+          </div>
+          <div class="empty-result" id="emptyResult">
+            <div class="scan-illustration"><div class="scan-sun"></div><div class="scan-grid"></div><div class="scan-line"></div></div>
+            <strong>Your results will appear here</strong>
+            <p>Upload an image and run analysis to view anomaly detection, confidence and inspection guidance.</p>
+          </div>
+          <div class="result-content hidden" id="resultContent">
+            <div class="result-banner" id="resultBanner">
+              <div class="result-symbol" id="resultSymbol">!</div>
+              <div><strong id="resultTitle">Potential hotspot detected</strong><p id="resultSummary">A suspicious region needs inspection.</p></div>
+            </div>
+            <div class="image-comparison">
+              <div class="comparison-item"><div class="image-label">ORIGINAL IMAGE</div><img id="originalResult" alt="Original uploaded thermal image"></div>
+              <div class="comparison-item"><div class="image-label">ANOMALY VIEW <span class="legend-dot"></span></div><div class="highlight-image"><img id="highlightResult" alt="Anomaly-highlighted image"><span class="hotspot-ring" id="hotspotRing"></span><span class="demo-overlay hidden" id="demoOverlay">DEMO HIGHLIGHT</span></div></div>
+            </div>
+            <div class="result-metrics">
+              <div><span>Model confidence</span><strong id="confidenceValue">92%</strong><div class="confidence-track"><span id="confidenceBar" style="width:92%"></span></div></div>
+              <div><span>Anomaly severity</span><strong id="severityValue" class="warning-text">Medium</strong></div>
+            </div>
+            <div class="recommendation"><span class="recommend-icon">↗</span><div><strong>Recommended next step</strong><p id="recommendationText">Arrange a closer visual inspection of the flagged region.</p></div></div>
+            <button class="secondary-button" id="saveReportButton" type="button">＋ Save to inspection history</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel history-panel" id="history">
+        <div class="panel-heading history-heading">
+          <div><p class="eyebrow">RECENT ACTIVITY</p><h2>Inspection history</h2></div>
+          <div class="history-controls">
+            <select id="statusFilter" aria-label="Filter inspections by status"><option value="all">All statuses</option><option value="Anomaly">Anomaly detected</option><option value="Healthy">Healthy</option></select>
+            <button class="secondary-button" id="exportButton" type="button">↓ Export CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>INSPECTION</th><th>DATE & TIME</th><th>CONFIDENCE</th><th>STATUS</th><th>SEVERITY</th></tr></thead>
+            <tbody id="historyBody">
+              <tr><td><span class="file-type">IR</span><span class="table-file">Array-A12_thermal.jpg<small>Solar array A · Panel 12</small></span></td><td>20 Oct 2026, 10:42 AM</td><td>96%</td><td><span class="status-badge anomaly">Anomaly</span></td><td><span class="severity-dot high"></span> High</td></tr>
+              <tr><td><span class="file-type">IR</span><span class="table-file">Array-B08_scan.png<small>Solar array B · Panel 08</small></span></td><td>20 Oct 2026, 09:18 AM</td><td>91%</td><td><span class="status-badge healthy">Healthy</span></td><td>—</td></tr>
+              <tr><td><span class="file-type">IR</span><span class="table-file">Array-C21_thermal.jpg<small>Solar array C · Panel 21</small></span></td><td>19 Oct 2026, 04:35 PM</td><td>84%</td><td><span class="status-badge anomaly">Anomaly</span></td><td><span class="severity-dot medium"></span> Medium</td></tr>
+            </tbody>
+          </table>
+          <div class="no-rows hidden" id="noRows">No inspections match this filter.</div>
+        </div>
+        <div class="table-footer"><span id="historyCount">Showing 3 recent inspections</span><a href="#reports" id="viewAllLink">View reports <span>→</span></a></div>
+      </section>
+      <footer class="footer" id="reports"><span>© 2026 SolarSentinel · InnoTech</span><span>AI-assisted inspection · Human review recommended</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="script.js"></script>
+</body>
+</html>

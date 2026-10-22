@@ -1,0 +1,223 @@
+
+const API_URL = "http://127.0.0.1:8000/api/analyze";
+const DEMO_MODE = false;
+
+const imageInput = document.getElementById("imageInput");
+const dropZone = document.getElementById("dropZone");
+const previewImage = document.getElementById("previewImage");
+const filePreview = document.getElementById("filePreview");
+const fileName = document.getElementById("fileName");
+const fileSize = document.getElementById("fileSize");
+const analyzeButton = document.getElementById("analyzeButton");
+const uploadMessage = document.getElementById("uploadMessage");
+const emptyResult = document.getElementById("emptyResult");
+const resultContent = document.getElementById("resultContent");
+const resultState = document.getElementById("resultState");
+const historyBody = document.getElementById("historyBody");
+const statusFilter = document.getElementById("statusFilter");
+const toast = document.getElementById("toast");
+let selectedFile = null;
+let previewUrl = null;
+let latestResult = null;
+let toastTimer = null;
+
+function notify(message) {
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
+}
+function formatBytes(bytes) {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+function setFile(file) {
+  uploadMessage.textContent = "";
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    uploadMessage.textContent = "Please choose an image file (PNG, JPG or WEBP).";
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    uploadMessage.textContent = "This image is larger than 10 MB. Please choose a smaller file.";
+    return;
+  }
+  selectedFile = file;
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl = URL.createObjectURL(file);
+  previewImage.src = previewUrl;
+  fileName.textContent = file.name;
+  fileSize.textContent = formatBytes(file.size);
+  filePreview.classList.remove("hidden");
+  dropZone.classList.add("hidden");
+  analyzeButton.disabled = false;
+  latestResult = null;
+  resultContent.classList.add("hidden");
+  emptyResult.classList.remove("hidden");
+  resultState.innerHTML = "<i></i> Ready to analyze";
+  resultState.querySelector("i").style.background = "#2bb985";
+}
+imageInput.addEventListener("change", e => setFile(e.target.files[0]));
+["dragenter", "dragover"].forEach(type => dropZone.addEventListener(type, e => {
+  e.preventDefault(); dropZone.classList.add("dragover");
+}));
+["dragleave", "drop"].forEach(type => dropZone.addEventListener(type, e => {
+  e.preventDefault(); dropZone.classList.remove("dragover");
+}));
+dropZone.addEventListener("drop", e => setFile(e.dataTransfer.files[0]));
+document.getElementById("removeImage").addEventListener("click", () => {
+  selectedFile = null;
+  imageInput.value = "";
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl = null;
+  filePreview.classList.add("hidden");
+  dropZone.classList.remove("hidden");
+  analyzeButton.disabled = true;
+  uploadMessage.textContent = "";
+});
+
+function makeDemoResult() {
+  // UI demonstration only. This is NOT a real model prediction.
+  const anomaly = Math.random() > 0.25;
+  return {
+    status: anomaly ? "Anomaly" : "Healthy",
+    confidence: anomaly ? 92 : 96,
+    severity: anomaly ? "Medium" : "None",
+    summary: anomaly ? "A suspicious thermal region was flagged for review." : "No suspicious thermal region was flagged in this demo result.",
+    recommendation: anomaly ? "Arrange a closer visual inspection of the flagged region. Confirm with a qualified technician before maintenance." : "No anomaly was flagged in this demo. Continue routine monitoring and follow site inspection procedures.",
+    demo: true
+  };
+}
+async function requestAnalysis(file) {
+  if (DEMO_MODE) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return makeDemoResult();
+  }
+  if (!API_URL) throw new Error("Set API_URL in script.js to Member 3's running endpoint.");
+  const formData = new FormData();
+  formData.append("file", file);
+  let response;
+  try {
+    response = await fetch(API_URL, { method: "POST", body: formData });
+  } catch (networkError) {
+    throw new Error("Unable to connect to the analysis backend. Please make sure the backend server is running.");
+  }
+  if (!response.ok) {
+    let errorDetail = `Analysis API returned ${response.status}.`;
+    try {
+      const errData = await response.json();
+      if (errData && errData.detail) {
+        errorDetail = errData.detail;
+      }
+    } catch (_) {}
+    throw new Error(errorDetail);
+  }
+  return response.json();
+}
+analyzeButton.addEventListener("click", async () => {
+  if (!selectedFile || analyzeButton.disabled) return;
+  analyzeButton.disabled = true;
+  analyzeButton.innerHTML = '<span class="spinner">◌</span> Analyzing...';
+  uploadMessage.textContent = DEMO_MODE ? "Demo mode: result is simulated, not generated by an AI model." : "Sending image to analysis API…";
+  try {
+    const result = await requestAnalysis(selectedFile);
+    latestResult = { ...result, filename: selectedFile.name, createdAt: new Date() };
+    renderResult(latestResult);
+    uploadMessage.textContent = result.demo ? "Demo result shown. Connect the model API for real predictions." : "Analysis complete.";
+  } catch (error) {
+    uploadMessage.textContent = error.message || "Could not analyze this image.";
+    notify(error.message || "Analysis failed. Check the API connection.");
+  } finally {
+    analyzeButton.disabled = !selectedFile;
+    analyzeButton.innerHTML = 'Analyze image <span>→</span>';
+  }
+});
+function renderResult(result) {
+  const isAnomaly = String(result.status || "Anomaly").toLowerCase().includes("anomaly");
+  let rawConfidence = Number(result.confidence ?? result.confidence_score ?? 0);
+  if (rawConfidence > 0 && rawConfidence <= 1) rawConfidence *= 100;
+  const confidence = Math.max(0, Math.min(100, Math.round(rawConfidence * 10) / 10));
+  emptyResult.classList.add("hidden");
+  resultContent.classList.remove("hidden");
+  resultState.innerHTML = `<i></i> ${result.demo ? "Demo result" : "Analysis complete"}`;
+  resultState.querySelector("i").style.background = isAnomaly ? "#f49b43" : "#2bb985";
+  const banner = document.getElementById("resultBanner");
+  banner.classList.toggle("healthy-banner", !isAnomaly);
+  document.getElementById("resultSymbol").textContent = isAnomaly ? "!" : "✓";
+  document.getElementById("resultTitle").textContent = isAnomaly ? "Potential hotspot detected" : "No anomaly flagged";
+  document.getElementById("resultSummary").textContent = result.summary || (isAnomaly ? "Suspicious region requires further inspection." : "No suspicious region was identified.");
+  document.getElementById("confidenceValue").textContent = `${confidence}%`;
+  document.getElementById("confidenceBar").style.width = `${confidence}%`;
+  const severity = result.severity || (isAnomaly ? "Medium" : "None");
+  document.getElementById("severityValue").textContent = severity;
+  document.getElementById("severityValue").className = isAnomaly ? "warning-text" : "healthy-text";
+  document.getElementById("recommendationText").textContent = result.recommendation || "Review the image and follow your site's inspection procedure.";
+  document.getElementById("originalResult").src = previewUrl;
+
+  let highlightSrc = previewUrl;
+  if (result.highlighted_image_url) {
+    highlightSrc = result.highlighted_image_url;
+  } else if (result.annotated_image) {
+    highlightSrc = result.annotated_image.startsWith("data:")
+      ? result.annotated_image
+      : `data:image/jpeg;base64,${result.annotated_image}`;
+  }
+  document.getElementById("highlightResult").src = highlightSrc;
+
+  const hasHighlighted = Boolean(result.highlighted_image_url || result.annotated_image);
+  document.getElementById("hotspotRing").style.display = (isAnomaly && !hasHighlighted) ? "block" : "none";
+  document.getElementById("demoOverlay").classList.toggle("hidden", !(result.demo && isAnomaly && !hasHighlighted));
+}
+document.getElementById("saveReportButton").addEventListener("click", () => {
+  if (!latestResult) return;
+  const result = latestResult;
+  const row = document.createElement("tr");
+  const date = result.createdAt.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+  const anomaly = String(result.status).toLowerCase().includes("anomaly");
+  const severity = result.severity || (anomaly ? "Review" : "—");
+  const safeName = result.filename.replace(/[<>]/g, "");
+  let rawConfidence = Number(result.confidence ?? result.confidence_score ?? 0);
+  if (rawConfidence > 0 && rawConfidence <= 1) rawConfidence *= 100;
+  const confidence = Math.max(0, Math.min(100, Math.round(rawConfidence * 10) / 10));
+  row.innerHTML = `<td><span class="file-type">IR</span><span class="table-file"></span></td><td></td><td>${confidence}%</td><td><span class="status-badge ${anomaly ? "anomaly" : "healthy"}">${anomaly ? "Anomaly" : "Healthy"}</span></td><td>${anomaly ? `<span class="severity-dot ${severity.toLowerCase() === "high" ? "high" : "medium"}"></span>${severity}` : "—"}</td>`;
+  row.querySelector(".table-file").textContent = safeName;
+  row.querySelector(".table-file").append(document.createElement("small"));
+  row.querySelector(".table-file small").textContent = "Uploaded image · New inspection";
+  row.children[1].textContent = date;
+  historyBody.prepend(row);
+  document.getElementById("totalInspected").textContent = Number(document.getElementById("totalInspected").textContent) + 1;
+  document.getElementById(anomaly ? "anomalyCount" : "healthyCount").textContent = Number(document.getElementById(anomaly ? "anomalyCount" : "healthyCount").textContent) + 1;
+  applyFilter();
+  notify("Inspection added to history.");
+});
+function applyFilter() {
+  const filter = statusFilter.value;
+  let visible = 0;
+  [...historyBody.rows].forEach(row => {
+    const status = row.querySelector(".status-badge")?.textContent.trim() || "";
+    const show = filter === "all" || status === filter;
+    row.classList.toggle("hidden", !show);
+    if (show) visible++;
+  });
+  document.getElementById("noRows").classList.toggle("hidden", visible !== 0);
+  document.getElementById("historyCount").textContent = `Showing ${visible} inspection${visible === 1 ? "" : "s"}`;
+}
+statusFilter.addEventListener("change", applyFilter);
+document.getElementById("exportButton").addEventListener("click", () => {
+  const rows = [["Inspection","Date & Time","Confidence","Status","Severity"]];
+  [...historyBody.rows].filter(row => !row.classList.contains("hidden")).forEach(row => {
+    const cells = row.children;
+    rows.push([
+      cells[0].querySelector(".table-file")?.childNodes[0]?.textContent.trim() || "",
+      cells[1].textContent.trim(), cells[2].textContent.trim(),
+      cells[3].textContent.trim(), cells[4].textContent.trim()
+    ]);
+  });
+  const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+  const link = document.createElement("a");
+  link.href = url; link.download = "solarsentinel-inspection-history.csv"; link.click();
+  URL.revokeObjectURL(url);
+  notify("Inspection history exported as CSV.");
+});
+document.getElementById("viewAllLink").addEventListener("click", () => notify("Use Export CSV to download the visible inspection history."));
+applyFilter();

@@ -1,0 +1,15 @@
+# SolarSentinel ML inference + FastAPI backend
+# Recommended Python: 3.11
+# These are suggested pinned versions; verify against the project's actual imports
+# and the environment used to train/test best.pt before final submission.
+
+ultralytics==8.3.203
+numpy==1.26.4
+opencv-python==4.10.0.84
+Pillow==10.4.0
+PyYAML==6.0.2
+
+# Backend API (needed only if api.py uses FastAPI and uploaded-file handling)
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20

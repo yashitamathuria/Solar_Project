@@ -1,0 +1,72 @@
+SOLARSENTINEL — DEPENDENCIES & SETUP GUIDE
+Innotech 2026 | ML Model + Backend Integration
+
+PURPOSE
+This guide explains the suggested Python dependencies for running the SolarSentinel
+YOLO-based model and connecting it to a FastAPI backend. The trained checkpoint is
+best.pt. Prediction scripts may include predict_model.py and predict_one.py.
+
+RECOMMENDED ENVIRONMENT
+• Python 3.11 is recommended for this pinned package set.
+• Use a fresh virtual environment on the computer that will run the project.
+• Do not copy the .venv folder from another computer; install packages locally.
+• These versions are a practical starting point, not a verified export of the
+  original training environment. Confirm imports and test the scripts before handover.
+
+DEPENDENCIES
+• ultralytics — loads and runs the YOLO model and provides prediction utilities.
+• numpy — numerical arrays and data processing.
+• opencv-python — image reading and image processing, if imported by the scripts.
+• Pillow — image handling, if used by the scripts.
+• PyYAML — reading YAML configuration files, if used by the scripts.
+• fastapi — creates HTTP API endpoints; required only if api.py uses FastAPI.
+• uvicorn — runs the FastAPI application.
+• python-multipart — supports uploaded image files when FastAPI uses multipart/form-data.
+
+INSTALLATION (WINDOWS POWERSHELL)
+1. Open a terminal in the SolarSentinel project folder.
+2. Create a virtual environment:
+   py -3.11 -m venv .venv
+3. Activate it:
+   .\.venv\Scripts\Activate.ps1
+4. Update pip:
+   python -m pip install --upgrade pip
+5. Install the listed dependencies:
+   python -m pip install -r requirements.txt
+
+If PowerShell blocks activation, you can run the environment's Python directly:
+   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+MODEL AND API CHECKS
+• Confirm the prediction code loads the trained file best.pt and points to the
+  correct path on the receiving computer.
+• Check the input image path and any confidence threshold in the prediction script.
+• If api.py uses FastAPI and defines the application as app, a common start command is:
+   uvicorn api:app --reload
+• The API documentation is often available at http://127.0.0.1:8000/docs.
+  This URL and command apply only if the API code matches these assumptions.
+
+IMPORTANT COMPATIBILITY NOTES
+1. PyTorch is installed as a dependency of Ultralytics in many setups, but the
+   suitable PyTorch build can depend on the operating system, Python version,
+   and whether the computer uses CPU or a particular CUDA-enabled GPU.
+2. If pip reports a dependency conflict, do not randomly change package versions.
+   Check the Python version, the full error message, and the versions used when
+   the model was trained. Install a PyTorch build appropriate for the target machine
+   if needed.
+3. If a script imports another package not listed here, add that dependency after
+   checking its compatibility. Conversely, remove packages not used by the scripts.
+4. This file is a suggested integration environment. It does not include dataset
+   training tools or optional packages unless they are required by the actual code.
+5. Test from a clean environment before sharing the ZIP with the team member.
+
+HANDOVER CHECKLIST
+[ ] Include requirements.txt with the model and prediction scripts.
+[ ] Include best.pt and confirm the code uses that checkpoint.
+[ ] Verify package imports and run a sample prediction.
+[ ] If using the API, test one image upload and inspect the response.
+[ ] Record any changes to package versions that were needed for the target computer.
+
+Note: The exact dependencies and compatible versions can only be confirmed fully by
+checking the imports in train_model.py, predict_model.py, predict_one.py, and api.py,
+plus the environment in which the model was successfully tested.
